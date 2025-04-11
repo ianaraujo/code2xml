@@ -1,13 +1,5 @@
 # code2xml
 
-![Logo](public/logo.png)
-
-## TO-DO
-
-- [] Add support for multiple `--include` calls
-
-## Description
-
 `code2xml` is a utility designed to facilitate the generation of code context for Large Language Models (LLMs). It converts source code files into an XML representation, making it easier to select and format project files as XML prompts for LLMs. This tool preserves the directory structure and content of your code files within an XML format, which is particularly useful for:
 
 - Providing code context to LLMs
@@ -15,6 +7,10 @@
 - Generating XML prompts from code
 
 The tool scans your codebase based on provided glob patterns and creates an XML tree that represents both the directory structure and the content of each file, optimized for LLM consumption.
+
+## TO-DO
+
+- [] Add support for multiple `--include` or `-i` calls
 
 ## Installation
 
@@ -25,19 +21,35 @@ The tool scans your codebase based on provided glob patterns and creates an XML 
 ### Installation Steps
 
 1. Clone this repository:
+
+```
+git clone https://github.com/yourusername/code2xml.git
+cd code2xml
+```
+
+2. Install locally using `pip`:
    ```
-   git clone https://github.com/yourusername/code2xml.git
-   cd code2xml
+   pip install .
    ```
 
-2. Make the script executable:
+3. Optional: Install locally using `pip` developer mode:
+
+  If you’re actively editing the script and don’t want to re-install on every change, use the editable install flag.
+  
+  ```
+  pip install -e .
+  ```
+
+#### Alternative
+
+1. Make the script executable:
    ```
-   chmod +x main.py
+   chmod +x code2xml.py
    ```
 
-3. Optional: Create a symlink to use it globally:
+2. Optional: Create a symlink to use it globally:
    ```
-   sudo ln -s $(pwd)/main.py /usr/local/bin/code2xml
+   sudo ln -s $(pwd)/code2xml.py /usr/local/bin/code2xml
    ```
 
 ## Usage
