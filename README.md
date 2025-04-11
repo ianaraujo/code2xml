@@ -59,7 +59,13 @@ cd code2xml
 Run the script with the `--include` parameter followed by a glob pattern to match the files you want to convert:
 
 ```
-code2xml --include "src/**/*.py"
+code2xml --include src/**/*.py
+```
+
+or
+
+```
+code2xml -i src/**/*.py project/**/*.{js,ts}
 ```
 
 This will output the XML representation of all Python files in the `src` directory and its subdirectories to standard output.
@@ -69,24 +75,24 @@ This will output the XML representation of all Python files in the `src` directo
 To save the output to a file:
 
 ```
-code2xml --include "src/**/*.py" > output.txt
+code2xml --include src/**/*.py > output.txt
 ```
 
 ### Examples
 
 Convert all Python files in the current directory:
 ```
-code2xml --include "*.py"
+code2xml --include *.py
 ```
 
 Convert all JavaScript and TypeScript files in a project:
 ```
-code2xml --include "project/**/*.{js,ts}"
+code2xml --include project/**/*.{js,ts}
 ```
 
 Convert all source files except node_modules directory:
 ```
-code2xml --include "!(node_modules)/**/*.*"
+code2xml --include !(node_modules)/**/*.*
 ```
 
 ## XML Output Structure
