@@ -4,15 +4,17 @@ import os
 import sys
 import glob
 import argparse
-from pathlib import Path
+import subprocess
+import shutil
 
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
 def escape_for_xml(text: str) -> str:
     """
     Escapes special characters to ensure the text is XML-safe.
     """
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 def count_tokens(text: str) -> int:
     """
@@ -20,6 +22,18 @@ def count_tokens(text: str) -> int:
     This is a rough estimate - actual token count may vary by model.
     """
     return len(text) // 4
+
+def copy(text: str) -> None:
+    try:
+        if shutil.which("clip.exe"):
+            subprocess.run("clip.exe", input=text.encode('utf-8'), check=True)
+            print("XML output copied to clipboard.")
+        
+    except Exception as e:
+        print(f"Warning: Could not copy to clipboard. Error: {e}", file=sys.stderr)
+        print("You can manually copy the XML output from the console.")
+        
+        return
 
 def collect_files_from_input(input_path: str) -> list:
     """
@@ -65,7 +79,7 @@ def convert_files_to_xml(file_paths):
         file_element.set("name", os.path.basename(fpath))
         
         escaped_content = escape_for_xml(file_content)
-        file_element.text = "\n" + escaped_content
+        file_element.text = "\n" + escaped_content + "\n"
 
     return context_element
 
@@ -96,13 +110,16 @@ def main():
 
     # convert the ElementTree to a pretty-printed XML string
     tree = ET.ElementTree(root_element)
-    
-    ET.indent(tree, space="  ", level=0)
 
-    xml_string = ET.tostring(tree.getroot(), encoding='utf-8').decode('utf-8')
+    # ET.indent(tree, space="  ", level=0)
+
+    xml_bytes = ET.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
     
-    #### PRINTING XML ####
-    print(xml_string)
+    #### RESULT ####
+    xml_string = xml_bytes.decode('utf-8')
+
+    print(xml_string)  # print to console
+    copy(xml_string)  # copy to clipboard
     
     # Print token count estimate
     token_count = count_tokens(xml_string)
