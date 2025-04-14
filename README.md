@@ -8,10 +8,6 @@
 
 The tool scans your codebase based on provided glob patterns and creates an XML tree that represents both the directory structure and the content of each file, optimized for LLM consumption.
 
-## TO-DO
-
-- [] Add support for multiple `--include` or `-i` calls
-
 ## Installation
 
 ### Prerequisites
@@ -28,29 +24,32 @@ cd code2xml
 ```
 
 2. Install locally using `pip`:
-   ```
-   pip install .
-   ```
+
+```
+pip install .
+```
 
 3. Optional: Install locally using `pip` developer mode:
 
-  If you’re actively editing the script and don’t want to re-install on every change, use the editable install flag.
+If you’re actively editing the script and don’t want to re-install on every change, use the editable install flag.
   
-  ```
-  pip install -e .
-  ```
+```
+pip install -e .
+```
 
 #### Alternative
 
 1. Make the script executable:
-   ```
-   chmod +x code2xml.py
-   ```
+
+```
+chmod +x code2xml.py
+```
 
 2. Optional: Create a symlink to use it globally:
-   ```
-   sudo ln -s $(pwd)/code2xml.py /usr/local/bin/code2xml
-   ```
+
+```
+sudo ln -s $(pwd)/code2xml.py /usr/local/bin/code2xml
+```
 
 ## Usage
 
@@ -81,16 +80,19 @@ code2xml --include src/**/*.py > output.txt
 ### Examples
 
 Convert all Python files in the current directory:
+
 ```
 code2xml --include *.py
 ```
 
 Convert all JavaScript and TypeScript files in a project:
+
 ```
 code2xml --include project/**/*.{js,ts}
 ```
 
 Convert all source files except node_modules directory:
+
 ```
 code2xml --include !(node_modules)/**/*.*
 ```
@@ -100,23 +102,21 @@ code2xml --include !(node_modules)/**/*.*
 The generated XML has the following structure:
 
 ```xml
-<project>
-  <directory_structure>
-    <directory name="dir1">
-      <directory name="dir2">
-        <file name="file1.py" />
-      </directory>
-      <file name="file2.py" />
-    </directory>
-  </directory_structure>
-
+<context>
   <file name="file1.py">
-    # file content goes here
+    print("Hello, World!")
   </file>
   <file name="file2.py">
-    # file content goes here
+    import time
+
+    def greet():
+        print("Hello, World!")
+        time.sleep(1)
+    
+    if __name__ == "__main__":
+        greet()
   </file>
-</project>
+</context>
 ```
 
 ## License
