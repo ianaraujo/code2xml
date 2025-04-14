@@ -14,7 +14,9 @@ def escape_for_xml(text: str) -> str:
     """
     Escapes special characters to ensure the text is XML-safe.
     """
-    return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+    return (text.replace("&amp;amp;", "&amp;amp;amp;")
+                .replace("&amp;lt;", "&amp;amp;lt;")
+                .replace("&amp;gt;", "&amp;amp;gt;"))
 
 def count_tokens(text: str) -> int:
     """
@@ -27,12 +29,10 @@ def copy(text: str) -> None:
     try:
         if shutil.which("clip.exe"):
             subprocess.run("clip.exe", input=text.encode('utf-8'), check=True)
-            print("XML output copied to clipboard.")
-        
+            print("\nXML output copied to clipboard.")
     except Exception as e:
-        print(f"Warning: Could not copy to clipboard. Error: {e}", file=sys.stderr)
-        print("You can manually copy the XML output from the console.")
-        
+        print(f"\nWarning: Could not copy to clipboard. Error: {e}", file=sys.stderr)
+        print("\nYou can manually copy the XML output from the console.")
         return
 
 def collect_files_from_input(input_path: str) -> list:
@@ -46,11 +46,9 @@ def collect_files_from_input(input_path: str) -> list:
     
     if path.is_file():
         return [str(path)]
-    
     elif path.is_dir():
         # collect all files recursively from directory
         return [str(p) for p in path.rglob('*') if p.is_file()]
-    
     else:
         return glob.glob(input_path, recursive=True)
 
@@ -58,8 +56,12 @@ def convert_files_to_xml(file_paths):
     """
     Creates an XML structure:
     <context>
-        <file name="filename1">...</file>
-        <file name="filename2">...</file>
+        <file name="filename1">
+          ... file content with a newline at the start and end ...
+        </file>
+        <file name="filename2">
+          ... file content ...
+        </file>
         ...
     </context>
     """
@@ -78,10 +80,56 @@ def convert_files_to_xml(file_paths):
         file_element = ET.SubElement(context_element, "file")
         file_element.set("name", os.path.basename(fpath))
         
+        # Add newlines before and after the file content.
         escaped_content = escape_for_xml(file_content)
         file_element.text = "\n" + escaped_content + "\n"
 
     return context_element
+
+def format_xml(elem: ET.Element) -> str:
+    """
+    Custom formatter that converts an ElementTree Element into a string according to:
+    
+    - Each opening and closing tag appears on its own line.
+    - No extra indentation is added to XML tags.
+    - If the element is a <file>, its text content is indented (here with two spaces per line)
+      and ensured to begin and end with a blank line.
+    """
+    # Build the opening tag with attributes (if any)
+    attr_text = " ".join(f'{key}="{value}"' for key, value in elem.attrib.items())
+    if attr_text:
+        open_tag = f"<{elem.tag} {attr_text}>"
+    else:
+        open_tag = f"<{elem.tag}>"
+        
+    lines = [open_tag]
+
+    # Process element text.
+    if elem.text and elem.text.strip():
+        # For file tags, indent each nonempty line by two spaces.
+        if elem.tag == "file":
+            # We assume elem.text already has newlines at the start and end.
+            text_lines = elem.text.splitlines()
+            for line in text_lines:
+                if line.strip():
+                    lines.append("  " + line)
+                else:
+                    # preserve blank lines
+                    lines.append("")
+        else:
+            lines.extend(elem.text.splitlines())
+    
+    # Process all child elements recursively.
+    for child in elem:
+        child_formatted = format_xml(child)
+        # Add each line of the child formatting.
+        lines.extend(child_formatted.splitlines())
+    
+    # Add closing tag on its own line.
+    closing_tag = f"</{elem.tag}>"
+    lines.append(closing_tag)
+    
+    return "\n".join(lines)
 
 def main():
     parser = argparse.ArgumentParser(description="Convert code files to an XML structure.")
@@ -99,29 +147,22 @@ def main():
 
     args = parser.parse_args()
     
-    # collect all file paths from all inputs
-    all_files = set()  # Using set to avoid duplicates
+    # Collect all file paths from all inputs (avoid duplicates)
+    all_files = set()
     for input_path in args.include:
         files = collect_files_from_input(input_path)
         all_files.update(files)
 
-    # build the XML structure
-    root_element = convert_files_to_xml(sorted(all_files))  # Sort for consistent output
+    # Build the XML structure
+    root_element = convert_files_to_xml(sorted(all_files))  # sort for consistent output
 
-    # convert the ElementTree to a pretty-printed XML string
-    tree = ET.ElementTree(root_element)
-
-    # ET.indent(tree, space="  ", level=0)
-
-    xml_bytes = ET.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
-    
-    #### RESULT ####
-    xml_string = xml_bytes.decode('utf-8')
+    # Use our custom formatter instead of ET.tostring
+    xml_string = format_xml(root_element)
 
     print(xml_string)  # print to console
-    copy(xml_string)  # copy to clipboard
+    copy(xml_string)   # try copying to clipboard
     
-    # Print token count estimate
+    # Print token count estimate (sent to stderr)
     token_count = count_tokens(xml_string)
     print(f"\nEstimated token count: {token_count}", file=sys.stderr)
 
